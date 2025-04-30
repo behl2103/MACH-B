@@ -28,7 +28,7 @@ router.post("/addLog", async (req, res) => {
 router.post("/addLogs", (req, res) => {
   const { numberoflogs, campLocation } = req.body;
   let content = "";
-  const logs = generateRandomLogs(numberoflogs, campLocation);
+  const logs = generateRandomLogs(numberoflogs);
   logs.forEach(
     (logData) =>
       (content += `${campLocation},${logData.timestamp},${logData.source},${logData.destination},${logData.user},${logData.device},${logData.eventType},${logData.eventDescription},${logData.eventSeverity},${logData.mlRiskScore}\n`)

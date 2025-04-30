@@ -9,7 +9,7 @@ export default function Page() {
       <Button
         onPress={async () => {
           const downloadExcelResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/exportLogsAsCSV`
+            "http://localhost:5000/admin/exportLogsAsCSV"
           );
           const downloadExcelBlob = await downloadExcelResponse.blob();
           saveAs(downloadExcelBlob, "AllLogs.csv");
@@ -20,7 +20,7 @@ export default function Page() {
       <Button
         onPress={async () => {
           const downloadExcelResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/exportLogsAsHTML`
+            "http://localhost:5000/admin/exportLogsAsHTML"
           );
           const downloadExcelBlob = await downloadExcelResponse.blob();
           saveAs(downloadExcelBlob, "AllLogs.html");

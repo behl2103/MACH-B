@@ -8,7 +8,7 @@ dotenv.config({ path: "./.env" });
 app.use(cors());
 app.use(express.json());
 
-const PORT = 5001;
+const PORT = 5000;
 
 web3.initializeWeb3();
 

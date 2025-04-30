@@ -33,7 +33,7 @@ export default function Home() {
   useEffect(() => {
     const fn = async () => {
       const response = fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/dashboard?threshold=0.7`
+        "http://localhost:5000/admin/dashboard?threshold=0.7"
       );
       response.then(async (r) => {
         const j = await r.json();
@@ -50,9 +50,6 @@ export default function Home() {
     };
     fn();
   }, []);
-
-
-  
 
   return (
     <>

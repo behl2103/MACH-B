@@ -147,7 +147,7 @@ router.get("/dashboard", async (req, res) => {
         for (const key in eventSeverityDaily) {
           dayObject[key + "_count"] = eventSeverityDaily[key].find(
             (item) => item.day === day
-          )?.count;
+          ).count;
         }
         resultArray.push(dayObject);
       }
@@ -194,81 +194,6 @@ router.get("/dashboard", async (req, res) => {
       });
     });
 });
-router.get("/blocked_ips", async (req, res) => {
-  const fsStream = fs.createReadStream(
-    `./${process.env.CENTRAL_LOG_FOLDER}/Blocked_IPS.txt`
-  );
-  const csvStream = csv();
-  const arr = [];
-
-  fsStream
-    .pipe(csvStream)
-    .on("data", (data) => {
-      arr.push(data);
-    })
-    .on("end", () => res.json({ blocked_ips: arr }));
-});
-router.get("/revoked_access", async (req, res) => {
-  const fsStream = fs.createReadStream(
-    `./${process.env.CENTRAL_LOG_FOLDER}/REVOKED_ACCESS.txt`
-  );
-  const csvStream = csv();
-  const arr = [];
-
-  fsStream
-    .pipe(csvStream)
-    .on("data", (data) => {
-      arr.push(data);
-    })
-    .on("end", () => res.json({ revoked_access: arr }));
-});
-router.post("/unblock_ip", async (req, res) => {
-  const { ip } = req.body;
-  const fsStream = fs.createReadStream(
-    `./${process.env.CENTRAL_LOG_FOLDER}/Blocked_IPS.txt`
-  );
-  const csvStream = csv();
-  let content = "ip_address\n";
-  fsStream
-    .pipe(csvStream)
-    .on("data", (data) => {
-      if (data.ip_address != ip) content += data.ip_address + "\n";
-    })
-    .on("end", () => {
-      fs.writeFile(
-        `./${process.env.CENTRAL_LOG_FOLDER}/Blocked_IPS.txt`,
-        content,
-        function (err) {
-          if (err) throw err;
-        }
-      );
-      res.send("Success");
-    });
-});
-router.post("/allow_access", async (req, res) => {
-  const { ip } = req.body;
-  const fsStream = fs.createReadStream(
-    `./${process.env.CENTRAL_LOG_FOLDER}/REVOKED_ACCESS.txt`
-  );
-  const csvStream = csv();
-  let content = "log_description\n";
-  fsStream
-    .pipe(csvStream)
-    .on("data", (data) => {
-      if (data.log_description != ip) content += data.log_description + "\n";
-    })
-    .on("end", () => {
-      fs.writeFile(
-        `./${process.env.CENTRAL_LOG_FOLDER}/REVOKED_ACCESS.txt`,
-        content,
-        function (err) {
-          if (err) throw err;
-        }
-      );
-      res.send("Success");
-    });
-});
-
 router.get("/ml", async (req, res) => {
   let threshold = 0.7;
   let riskVDay = [
