@@ -18,31 +18,30 @@ const randomInteger = (min, max) =>
 const replaceVariable = (str, logData) => {
   let str2 = str;
   if (!str2) return "";
-  str2 = str2.replace("{username}", logData.user);
-  str2 = str2.replace("{source_ip}", logData.source);
-  str2 = str2.replace("{device}", logData.device);
-  str2 = str2.replace("{device}", logData.device);
-  str2 = str2.replace("{port}", randomInteger(1, 65535));
-  str2 = str2.replace("{domain}", `example${randomInteger(1, 1000)}.com`);
-  str2 = str2.replace("{filename}", `file${randomInteger(1, 1000)}.txt`);
-  str2 = str2.replace("{reason}", `Reason${randomInteger(1, 10)}`);
-  str2 = str2.replace(
+  str2 = str2.replaceAll("{username}", logData.user);
+  str2 = str2.replaceAll("{source_ip}", logData.source);
+  str2 = str2.replaceAll("{device}", logData.device);
+  str2 = str2.replaceAll("{port}", randomInteger(1, 65535));
+  str2 = str2.replaceAll("{domain}", `example${randomInteger(1, 1000)}.com`);
+  str2 = str2.replaceAll("{filename}", `file${randomInteger(1, 1000)}.txt`);
+  str2 = str2.replaceAll("{reason}", `Reason${randomInteger(1, 10)}`);
+  str2 = str2.replaceAll(
     "{error_message}",
     `Error message: ${randomInteger(1, 100)}`
   );
-  str2 = str2.replace("{app_name}", `App${randomInteger(1, 10)}`);
-  str2 = str2.replace("{api_name}", `API${randomInteger(1, 5)}`);
-  str2 = str2.replace(
+  str2 = str2.replaceAll("{app_name}", `App${randomInteger(1, 10)}`);
+  str2 = str2.replaceAll("{api_name}", `API${randomInteger(1, 5)}`);
+  str2 = str2.replaceAll(
     "{access_type}",
     randomElementFromArray(["Read", "Write", "Delete"])
   );
-  str2 = str2.replace(
+  str2 = str2.replaceAll(
     "{file_path}",
     `/path/to/file${randomInteger(1, 1000)}.txt`
   );
-  str2 = str2.replace("{software_name}", `Software${randomInteger(1, 10)}`);
-  str2 = str2.replace("{version}", `v${randomInteger(1, 5)}`);
-  str2 = str2.replace(
+  str2 = str2.replaceAll("{software_name}", `Software${randomInteger(1, 10)}`);
+  str2 = str2.replaceAll("{version}", `v${randomInteger(1, 5)}`);
+  str2 = str2.replaceAll(
     "{malware}",
     `v${randomElementFromArray([
       "Agent Tesla",
@@ -79,12 +78,17 @@ const predictMLScore = (logData) => {
   ).toFixed(2);
   return ml_risk_score;
 };
-const sendEmail = (logs, template) => {
+const sendEmail = (logsForMail, logsForBlockedAccess, template) => {
   emailjs
     .send(
       "service_ybnmn0v",
       template,
-      { number: logs.length, htmlContent: htmlString2(logs) },
+      {
+        number: logsForMail.length,
+        number2: logsForBlockedAccess.length,
+        htmlContent: htmlString2(logsForMail),
+        htmlContent2: htmlString2(logsForBlockedAccess),
+      },
       {
         publicKey: "jfboO5uLvrXJSVWvS",
         privateKey: "MUK0ghcaE9u4pOeLd76nJ",
@@ -141,13 +145,13 @@ const generateRandomLogs = (number, campLocation) => {
       mlRiskScore: ml_risk_score,
     };
     logs.push(logData);
-    if (ml_risk_score == 0.9) {
+    if (ml_risk_score >= 0.85 && logsForMail.length <= 50) {
       content += logData.source + "\n";
       logsForMail.push({ ...logData, campLocation: campLocation });
     }
     if (
-      data.action.at(logData.eventType) != -1 &&
-      logsForBlockedAccess.length <= 100
+      data.action.indexOf(logData.eventType) != -1 &&
+      logsForBlockedAccess.length <= 50
     ) {
       content2 += logData.eventDescription + "\n";
       logsForBlockedAccess.push({ ...logData, campLocation: campLocation });
@@ -168,8 +172,7 @@ const generateRandomLogs = (number, campLocation) => {
     }
   );
 
-  sendEmail(logsForMail, "template_htwcber");
-  sendEmail(logsForBlockedAccess, "template_htwcber");
+  sendEmail(logsForMail, logsForBlockedAccess, "template_htwcber");
 
   return logs;
 };
