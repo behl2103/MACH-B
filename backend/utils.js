@@ -1,6 +1,7 @@
 const { DateTime } = require("luxon");
 const data = require("./data");
 const emailjs = require("@emailjs/nodejs");
+const fs = require("fs");
 
 const processJSONforBigInt = (obj) => {
   return JSON.parse(
@@ -19,6 +20,7 @@ const replaceVariable = (str, logData) => {
   if (!str2) return "";
   str2 = str2.replace("{username}", logData.user);
   str2 = str2.replace("{source_ip}", logData.source);
+  str2 = str2.replace("{device}", logData.device);
   str2 = str2.replace("{device}", logData.device);
   str2 = str2.replace("{port}", randomInteger(1, 65535));
   str2 = str2.replace("{domain}", `example${randomInteger(1, 1000)}.com`);
@@ -40,6 +42,17 @@ const replaceVariable = (str, logData) => {
   );
   str2 = str2.replace("{software_name}", `Software${randomInteger(1, 10)}`);
   str2 = str2.replace("{version}", `v${randomInteger(1, 5)}`);
+  str2 = str2.replace(
+    "{malware}",
+    `v${randomElementFromArray([
+      "Agent Tesla",
+      "AZORult",
+      "FormBook",
+      "Ursnif",
+      "LokiBot",
+      "MOUSEISLAND",
+    ])}`
+  );
 
   return str2;
 };
@@ -66,11 +79,11 @@ const predictMLScore = (logData) => {
   ).toFixed(2);
   return ml_risk_score;
 };
-const sendEmail = (logs) => {
+const sendEmail = (logs, template) => {
   emailjs
     .send(
       "service_ybnmn0v",
-      "template_htwcber",
+      template,
       { number: logs.length, htmlContent: htmlString2(logs) },
       {
         publicKey: "jfboO5uLvrXJSVWvS",
@@ -89,6 +102,10 @@ const sendEmail = (logs) => {
 const generateRandomLogs = (number, campLocation) => {
   const logs = [];
   const logsForMail = [];
+  const logsForBlockedAccess = [];
+
+  let content = "";
+  let content2 = "";
   for (let i = 0; i < number; i++) {
     let rnd = randomElementFromArray([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
     let logData = {
@@ -124,10 +141,36 @@ const generateRandomLogs = (number, campLocation) => {
       mlRiskScore: ml_risk_score,
     };
     logs.push(logData);
-    if (ml_risk_score == 0.9)
+    if (ml_risk_score == 0.9) {
+      content += logData.source + "\n";
       logsForMail.push({ ...logData, campLocation: campLocation });
+    }
+    if (
+      data.action.at(logData.eventType) != -1 &&
+      logsForBlockedAccess.length <= 100
+    ) {
+      content2 += logData.eventDescription + "\n";
+      logsForBlockedAccess.push({ ...logData, campLocation: campLocation });
+    }
   }
-  sendEmail(logsForMail);
+  fs.appendFile(
+    `./${process.env.CENTRAL_LOG_FOLDER}/Blocked_IPS.txt`,
+    content,
+    function (err) {
+      if (err) throw err;
+    }
+  );
+  fs.appendFile(
+    `./${process.env.CENTRAL_LOG_FOLDER}/REVOKED_ACCESS.txt`,
+    content2,
+    function (err) {
+      if (err) throw err;
+    }
+  );
+
+  sendEmail(logsForMail, "template_htwcber");
+  sendEmail(logsForBlockedAccess, "template_htwcber");
+
   return logs;
 };
 
